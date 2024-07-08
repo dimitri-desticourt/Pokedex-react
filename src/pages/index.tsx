@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/layout';
 import { usePokemonStore } from '../store/pokemonStore';
 import PokemonList from '../components/PokemonList';
+import PokemonDetails from '../components/PokemonDetails';
+import Pagination from '../components/Pagination';
 
 const Home = () => {
   const { pokemonList, fetchPokemon } = usePokemonStore();
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
 
   useEffect(() => {
     fetchPokemon();
@@ -13,11 +17,22 @@ const Home = () => {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+    setCurrentPage(1);
   };
 
-  const filteredPokemon = pokemonList.filter(pokemon =>
+  const filteredPokemon = pokemonList.filter((pokemon: Pokemon) =>
     pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPokemon = filteredPokemon.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(filteredPokemon.length / itemsPerPage);
+
+  const onPageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   return (
     <Layout>
@@ -32,7 +47,8 @@ const Home = () => {
             onChange={handleSearchChange}
           />
         </div>
-        <PokemonList pokemonList={searchTerm.trim() === '' ? pokemonList : filteredPokemon} />
+        <PokemonList pokemonList={currentPokemon} />
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
       </div>
     </Layout>
   );
